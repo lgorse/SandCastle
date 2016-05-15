@@ -7,7 +7,7 @@ using JBooth.VertexPainterPro;
 public class paintjob : MonoBehaviour
 {
 
-	public static float brushSize = 2;
+	public static float brushSize = 0.5f;
 	public static float brushFlow = 0.1f;
 	public static float brushFalloff = 0.1f;
 	public static float deltaTime = 1;
@@ -18,21 +18,19 @@ public class paintjob : MonoBehaviour
 	public class Painter
 	{
 		public PaintJob[] jobs = new PaintJob[0];
-		private Dictionary<string, PaintJob> vectorsToJobName = new Dictionary<string, PaintJob> ();
+		private Dictionary<string, PaintJob> vectorsToJob = new Dictionary<string, PaintJob> ();
 		private List<Vector3> allVectorsArray = new List<Vector3> ();
 
 
 
 
-		public Painter ()
+		public Painter (GameObject terrainObject)
 		{
+			InitMeshes(terrainObject);
 		}
 
 		public void InitMeshes (GameObject terrainObject)
 		{
-			//RevertMat();
-
-
 			List<PaintJob> pjs = new List<PaintJob> ();
 			Transform[] objs = terrainObject.GetComponentsInChildren<Transform> (); 
 
@@ -54,8 +52,8 @@ public class paintjob : MonoBehaviour
 							// we handle it poorly until I can find a better solution
 							
 							//Debug.Log ("now in world space: " + point.ToString () + " as opposed to local " + position.ToString());
-							if (!vectorsToJobName.ContainsKey (point.ToString ())) {
-								vectorsToJobName.Add (point.ToString (), pJob);
+							if (!vectorsToJob.ContainsKey (point.ToString ())) {
+								vectorsToJob.Add (point.ToString (), pJob);
 								allVectorsArray.Add (point);
 							}
 								
@@ -67,21 +65,9 @@ public class paintjob : MonoBehaviour
 			}
 
 			jobs = pjs.ToArray ();
-			//UpdateDisplayMode();
 		}
 			
-
-		public void paintMeshes (Vector3 point)
-		{
-			if (jobs.Length > 0) {
-				for (int i = 0; i < jobs.Length; ++i) {
-					PaintMesh (jobs [i], point);
-
-				}
-				EndStroke ();
-			}
-
-		}
+	
 
 		public void paintMeshesFromDictionary (Vector3 point)
 		{
@@ -92,80 +78,72 @@ public class paintjob : MonoBehaviour
 			//float scale = 1.0f / Mathf.Abs (j.renderer.transform.lossyScale.x);
 			float bz = 1.0f * paintjob.brushSize;
 
+//			foreach (KeyValuePair<string, PaintJob> pair in vectorsToJob){
+//				Vector3 vector = stringToVector3 (pair.Key);
+//				float d = Vector3.Distance (point, vector);
+//				if (d < bz) {
+//					PaintJob j = vectorsToJob
+//						[vector.ToString ()];
+//					if (!closeJobs.Contains (j)) {
+//						closeJobs.Add (j);
+//					}
+//
+//				}
+//			}
+
 
 
 			foreach (Vector3 vector in allVectorsArray) {
 				float d = Vector3.Distance (point, vector);
 				if (d < bz) {
-					PaintJob j = vectorsToJobName [vector.ToString ()];
+					PaintJob j = vectorsToJob
+						[vector.ToString ()];
 					if (!closeJobs.Contains (j)) {
 						closeJobs.Add (j);
 					}
-
-
-					//PaintVertPosition (j, i, str * (float)paintjob.deltaTime * paintjob.brushFlow * paintjob.pressure);
+						
 				}
 			}
 
 			foreach (PaintJob j in closeJobs) {
-				Profiler.BeginSample("Paint Mesh");
-				PrepBrushMode (j);
-				Vector3 localPoint = j.renderer.transform.worldToLocalMatrix.MultiplyPoint3x4 (point);
-				for (int i = 0; i < j.verts.Length; ++i) {
-					float d = Vector3.Distance (localPoint, j.verts [i]);	
-					if (d < bz) {
-						float str = 1.0f - d / bz;
-						str = Mathf.Pow (str, paintjob.brushFalloff);
-						PaintVertPosition (j, i, str * (float)paintjob.deltaTime * paintjob.brushFlow * paintjob.pressure);
-					}
-				}
-				j.stream.Apply ();
-				Profiler.EndSample();
-				
+				PaintMesh (j, point);	
 			}
 
 			EndStroke (closeJobs.ToArray());
+		}
+
+		private Vector3 stringToVector3(string key){
+
+			key = key.Split ('(', ')') [1];
+			string[] values = key.Split (',');	 
+
+				
+			Vector3 vector = new Vector3(float.Parse(values[0]), float.Parse(values[1]), float.Parse(values[2]));
+			return vector;
 
 
-
-
-			//	bool modPos = !(j.stream.positions == null || j.stream.positions.Length == 0);
-			
 		}
 
 
 		void PaintMesh (PaintJob j, Vector3 point)
 		{
-			//Profiler.BeginSample("Paint Mesh");
+			Profiler.BeginSample("Paint Mesh");
 			PrepBrushMode (j);
-			// convert point into local space, so we don't have to convert every point\
-
-			point = j.renderer.transform.worldToLocalMatrix.MultiplyPoint3x4 (point);
-			// for some reason this doesn't handle scale, seems like it should
-			// we handle it poorly until I can find a better solution
 			float scale = 1.0f / Mathf.Abs (j.renderer.transform.lossyScale.x);
-
 			float bz = scale * paintjob.brushSize;
 
-
-
-			bool modPos = !(j.stream.positions == null || j.stream.positions.Length == 0);
-
-
-
+			Vector3 localPoint = j.renderer.transform.worldToLocalMatrix.MultiplyPoint3x4 (point);
 			for (int i = 0; i < j.verts.Length; ++i) {
-				float d = Vector3.Distance (point, j.verts [i]);
+				float d = Vector3.Distance (localPoint, j.verts [i]);	
 				if (d < bz) {
-
-
-
 					float str = 1.0f - d / bz;
 					str = Mathf.Pow (str, paintjob.brushFalloff);
 					PaintVertPosition (j, i, str * (float)paintjob.deltaTime * paintjob.brushFlow * paintjob.pressure);
 				}
 			}
 			j.stream.Apply ();
-			//Profiler.EndSample();
+			Profiler.EndSample();
+			
 		}
 
 		void PrepBrushMode (PaintJob j)
@@ -191,16 +169,16 @@ public class paintjob : MonoBehaviour
 		void PaintVertPosition (PaintJob j, int i, float strength)
 		{
 			Vector3 cur = j.stream.positions [i];
-			//Vector3 oldWorldCur = j.renderer.transform.TransformPoint (cur);
-			Vector3 dir = new Vector3 (0, 1, 0);
+			Vector3 oldWorldCur = j.renderer.transform.TransformPoint (cur);
+			Vector3 dir = new Vector3 (0, 0.5f, 0);
 			dir *= strength;
 			cur += paintjob.pull ? dir : -dir;
 			j.stream.positions [i] = cur;
-//			Vector3 worldCur = j.renderer.transform.TransformPoint (cur);
-//			vectorsToJobName.Remove (oldWorldCur.ToString());
-//			if (!vectorsToJobName.ContainsKey(worldCur.ToString())){
-//				vectorsToJobName.Add (worldCur.ToString(), j);
-//			}
+			Vector3 worldCur = j.renderer.transform.TransformPoint (cur);
+//			vectorsToJob.Remove (oldWorldCur.ToString());
+//			vectorsToJob [worldCur.ToString ()] = j;
+//			allVectorsArray.Remove (oldWorldCur);
+//			allVectorsArray.Add (worldCur);
 
 		}
 
@@ -233,7 +211,7 @@ public class paintjob : MonoBehaviour
 						j.stream.tangents = new Vector4[m.vertexCount];
 					}
 					j.stream.tangents = m.tangents;
-					m.tangents.CopyTo(j.stream.tangents, 0);
+					//m.tangents.CopyTo(j.stream.tangents, 0);
 
 					m.RecalculateBounds();
 					j.stream.Apply();
@@ -241,51 +219,8 @@ public class paintjob : MonoBehaviour
 
 				Profiler.EndSample();
 			}
-			//Undo.CollapseUndoOperations(Undo.GetCurrentGroup());
 		}
-
-
-
-
-		void EndStroke()
-		{
-
-			// could possibly make this faster by avoiding the double apply..
-
-			Profiler.BeginSample("Recalculate Normals and Tangents");
-			for (int i = 0; i < jobs.Length; ++i)
-			{
-				PaintJob j = jobs[i];
-				if (j.stream.positions != null && j.stream.normals != null && j.stream.tangents != null)
-				{
-					Mesh m = j.stream.Apply(false);
-					m.triangles = j.meshFilter.sharedMesh.triangles;
-
-					m.RecalculateNormals();
-					if (j.stream.normals == null)
-					{
-						j.stream.normals = new Vector3[m.vertexCount];
-					}
-					j.stream.normals = m.normals;
-					//m.normals.CopyTo(j.stream.normals, 0);
-
-					m.uv = j.meshFilter.sharedMesh.uv;
-					CalculateMeshTangents(m);
-					if (j.stream.tangents == null)
-					{
-						j.stream.tangents = new Vector4[m.vertexCount];
-					}
-					j.stream.tangents = m.tangents;
-					m.tangents.CopyTo(j.stream.tangents, 0);
-
-					m.RecalculateBounds();
-					j.stream.Apply();
-				}
-
-				Profiler.EndSample();
-			}
-			//Undo.CollapseUndoOperations(Undo.GetCurrentGroup());
-		}
+			
 
 		void CalculateMeshTangents (Mesh mesh)
 		{
@@ -298,8 +233,6 @@ public class paintjob : MonoBehaviour
 			//variable definitions
 			int triangleCount = triangles.Length;
 			int vertexCount = vertices.Length;
-
-			Debug.Log ("triangles " + triangleCount + " vertexes "+ vertexCount);
 
 			Vector3[] tan1 = new Vector3[vertexCount];
 			Vector3[] tan2 = new Vector3[vertexCount];
@@ -404,6 +337,19 @@ public class paintjob : MonoBehaviour
 
 			}
 
+			public PaintJob (MeshFilter mf, Renderer r, string n)
+			{
+				meshFilter = mf;
+				renderer = r;
+				name = n;
+
+				verts = mf.sharedMesh.vertices;
+				normals = mf.sharedMesh.normals;
+				tangents = mf.sharedMesh.tangents;
+				// optionally defer this unless the brush is set to position..
+				InitMeshConnections ();
+			}
+
 			public void InitMeshConnections ()
 			{
 				Profiler.BeginSample ("Generate Mesh Connections");
@@ -445,32 +391,7 @@ public class paintjob : MonoBehaviour
 				Profiler.EndSample ();
 			}
 
-			public PaintJob (MeshFilter mf, Renderer r, string n)
-			{
-				meshFilter = mf;
-				renderer = r;
-				name = n;
-//			if (r.sharedMaterials != null && r.sharedMaterials.Length > 1)
-//			{
-//					Debug.Log(stream);
-//				stream.originalMaterial = new Material[r.sharedMaterials.Length];
-//				for (int i = 0; i < r.sharedMaterials.Length; ++i)
-//				{
-//					stream.originalMaterial[i] = r.sharedMaterials[i];
-//				}
-//			}
-//			else
-//			{
-//					Debug.Log(stream);
-//				stream.originalMaterial = new Material[1];
-//				stream.originalMaterial[0] = r.sharedMaterial;
-//			}
-				verts = mf.sharedMesh.vertices;
-				normals = mf.sharedMesh.normals;
-				tangents = mf.sharedMesh.tangents;
-				// optionally defer this unless the brush is set to position..
-				InitMeshConnections ();
-			}
+
 				
 		}
 			
