@@ -16,17 +16,20 @@ public class paintjob : MonoBehaviour
 	public static float pressure = 1.0f;
 
 
+
 	public class Painter
 	{
 		public PaintJob[] jobs = new PaintJob[0];
 
 		private PaintJob[,] jobMatrix = new PaintJob[8, 8];
+		private float quadSize = 0.0f;
 
 
 
 
-		public Painter (GameObject terrainObject)
+		public Painter (GameObject terrainObject, float quadSize)
 		{
+			this.quadSize = quadSize;
 			InitMeshes(terrainObject);
 		}
 
@@ -48,7 +51,7 @@ public class paintjob : MonoBehaviour
 
 						Vector3 minPoint = pJob.renderer.bounds.min;
 						Vector3 maxPoint = pJob.renderer.bounds.max;
-						jobMatrix [(int) Mathf.Floor (go.transform.position.x/6.25f), (int) Mathf.Floor (go.transform.position.z/6.25f)] = pJob;
+						jobMatrix [(int) Mathf.Floor (go.transform.position.x/quadSize), (int) Mathf.Floor (go.transform.position.z/quadSize)] = pJob;
 
 					}
 				}
@@ -72,16 +75,12 @@ public class paintjob : MonoBehaviour
 			Vector2 bottomLeft = new Vector2 (point.x - bz, point.z - bz);
 			Vector2 bottomRight = new Vector2 (point.x + bz, point.z - bz);
 
-			Debug.Log ("top left: " + topLeft);
-			Debug.Log ("top right: " + topRight);
-			Debug.Log ("bottom left: " + bottomLeft);
-			Debug.Log ("bottom right: " + bottomRight);
 
 			for (int i = 0; i < jobMatrix.GetLength(0); i++) {
 				for (int j = 0; j < jobMatrix.GetLength (1); j++) {
 					PaintJob cJob =  jobMatrix [i, j];
 					Vector2 jTopLeft = cJob.renderer.transform.position;
-					Rect jobRect = new Rect (jTopLeft.x, jTopLeft.y, 6.25f, 6.25f);
+					Rect jobRect = new Rect (jTopLeft.x, jTopLeft.y, quadSize, quadSize);
 					if (jobRect.Contains (topLeft) || jobRect.Contains (topRight) || jobRect.Contains (bottomLeft) || jobRect.Contains (bottomRight)) {
 						closeJobs.Add (cJob);
 					}

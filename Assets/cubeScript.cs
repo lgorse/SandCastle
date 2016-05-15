@@ -20,7 +20,13 @@ public class cubeScript : MonoBehaviour {
 		 eventSystem = GameObject.Find ("EventSystem");
 		 inputModule = eventSystem.GetComponent<GazeInputModule> ();
 		terrain = GameObject.Find ("Terrain");
-		paintHolder = new paintjob.Painter(terrain);	
+		QT_PolyWorldTerrain pTerrain = gameObject.GetComponent<QT_PolyWorldTerrain> ();
+		if (pTerrain != null) {
+			Vector2 chunk = pTerrain.GetChunkSizes()[pTerrain.chunkIndex];
+			paintHolder = new paintjob.Painter(terrain, chunk.x);
+		}
+
+
 	}
 	
 	// Update is called once per frame

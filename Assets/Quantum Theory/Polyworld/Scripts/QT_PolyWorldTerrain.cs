@@ -824,6 +824,7 @@ public class QT_PolyWorldTerrain : MonoBehaviour
 
     }
 
+
     //determines the measurements of valid chunksizes.
     public Vector2[] GetChunkSizes()
     {
@@ -855,5 +856,8 @@ public class QT_PolyWorldTerrain : MonoBehaviour
         }
         return finalSizes;
     }
-#endif
+
+
+	#endif
+
 }
