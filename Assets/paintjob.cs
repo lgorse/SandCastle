@@ -19,8 +19,6 @@ public class paintjob : MonoBehaviour
 	public class Painter
 	{
 		public PaintJob[] jobs = new PaintJob[0];
-		private Dictionary<string, PaintJob> vectorsToJob = new Dictionary<string, PaintJob> ();
-		private List<Vector3> allVectorsArray = new List<Vector3> ();
 
 		private PaintJob[,] jobMatrix = new PaintJob[8, 8];
 
@@ -52,21 +50,6 @@ public class paintjob : MonoBehaviour
 						Vector3 maxPoint = pJob.renderer.bounds.max;
 						jobMatrix [(int) Mathf.Floor (go.transform.position.x/6.25f), (int) Mathf.Floor (go.transform.position.z/6.25f)] = pJob;
 
-						foreach (Vector3 position in pJob.verts) {
-							Vector3 point = pJob.renderer.transform.TransformPoint (position);
-
-							// for some reason this doesn't handle scale, seems like it should
-							// we handle it poorly until I can find a better solution
-							
-							//Debug.Log ("now in world space: " + point.ToString () + " as opposed to local " + position.ToString());
-							if (!vectorsToJob.ContainsKey (point.ToString ())) {
-								vectorsToJob.Add (point.ToString (), pJob);
-								allVectorsArray.Add (point);
-							}
-								
-						}
-
-
 					}
 				}
 			}
@@ -84,32 +67,27 @@ public class paintjob : MonoBehaviour
 			//float scale = 1.0f / Mathf.Abs (j.renderer.transform.lossyScale.x);
 			float bz = 1.0f * paintjob.brushSize;
 
-//			foreach (KeyValuePair<string, PaintJob> pair in vectorsToJob){
-//				Vector3 vector = stringToVector3 (pair.Key);
-//				float d = Vector3.Distance (point, vector);
-//				if (d < bz) {
-//					PaintJob j = vectorsToJob
-//						[vector.ToString ()];
-//					if (!closeJobs.Contains (j)) {
-//						closeJobs.Add (j);
-//					}
-//
-//				}
-//			}
+			Vector2 topLeft = new Vector2 (point.x - bz, point.z + bz);
+			Vector2 topRight = new Vector2 (point.x + bz, point.z + bz);
+			Vector2 bottomLeft = new Vector2 (point.x - bz, point.z - bz);
+			Vector2 bottomRight = new Vector2 (point.x + bz, point.z - bz);
 
+			Debug.Log ("top left: " + topLeft);
+			Debug.Log ("top right: " + topRight);
+			Debug.Log ("bottom left: " + bottomLeft);
+			Debug.Log ("bottom right: " + bottomRight);
 
-
-			foreach (Vector3 vector in allVectorsArray) {
-				float d = Vector3.Distance (point, vector);
-				if (d < bz) {
-					PaintJob j = vectorsToJob
-						[vector.ToString ()];
-					if (!closeJobs.Contains (j)) {
-						closeJobs.Add (j);
+			for (int i = 0; i < jobMatrix.GetLength(0); i++) {
+				for (int j = 0; j < jobMatrix.GetLength (1); j++) {
+					PaintJob cJob =  jobMatrix [i, j];
+					Vector2 jTopLeft = cJob.renderer.transform.position;
+					Rect jobRect = new Rect (jTopLeft.x, jTopLeft.y, 6.25f, 6.25f);
+					if (jobRect.Contains (topLeft) || jobRect.Contains (topRight) || jobRect.Contains (bottomLeft) || jobRect.Contains (bottomRight)) {
+						closeJobs.Add (cJob);
 					}
-						
 				}
 			}
+				
 
 			foreach (PaintJob j in closeJobs) {
 				PaintMesh (j, point);	
@@ -175,16 +153,11 @@ public class paintjob : MonoBehaviour
 		void PaintVertPosition (PaintJob j, int i, float strength)
 		{
 			Vector3 cur = j.stream.positions [i];
-			Vector3 oldWorldCur = j.renderer.transform.TransformPoint (cur);
 			Vector3 dir = new Vector3 (0, 0.5f, 0);
 			dir *= strength;
 			cur += paintjob.pull ? dir : -dir;
 			j.stream.positions [i] = cur;
-			Vector3 worldCur = j.renderer.transform.TransformPoint (cur);
-//			vectorsToJob.Remove (oldWorldCur.ToString());
-//			vectorsToJob [worldCur.ToString ()] = j;
-//			allVectorsArray.Remove (oldWorldCur);
-//			allVectorsArray.Add (worldCur);
+
 
 		}
 
