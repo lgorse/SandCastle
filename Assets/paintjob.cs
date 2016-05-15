@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using JBooth.VertexPainterPro;
 
 
+
 public class paintjob : MonoBehaviour
 {
 
@@ -20,6 +21,8 @@ public class paintjob : MonoBehaviour
 		public PaintJob[] jobs = new PaintJob[0];
 		private Dictionary<string, PaintJob> vectorsToJob = new Dictionary<string, PaintJob> ();
 		private List<Vector3> allVectorsArray = new List<Vector3> ();
+
+		private PaintJob[,] jobMatrix = new PaintJob[8, 8];
 
 
 
@@ -45,6 +48,10 @@ public class paintjob : MonoBehaviour
 						PaintJob pJob = new PaintJob (mf, r, name);
 						pjs.Add (pJob);
 
+						Vector3 minPoint = pJob.renderer.bounds.min;
+						Vector3 maxPoint = pJob.renderer.bounds.max;
+						jobMatrix [(int) Mathf.Floor (go.transform.position.x/6.25f), (int) Mathf.Floor (go.transform.position.z/6.25f)] = pJob;
+
 						foreach (Vector3 position in pJob.verts) {
 							Vector3 point = pJob.renderer.transform.TransformPoint (position);
 
@@ -63,7 +70,6 @@ public class paintjob : MonoBehaviour
 					}
 				}
 			}
-
 			jobs = pjs.ToArray ();
 		}
 			
