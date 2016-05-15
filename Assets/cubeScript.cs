@@ -33,7 +33,8 @@ public class cubeScript : MonoBehaviour {
 
 	public void dumpsand(){
 		Vector3 position = inputModule.GetIntersectionPosition();
-		paintHolder.paintMeshes (position);
+		//paintHolder.paintMeshes (position);
+		paintHolder.paintMeshesFromDictionary (position);
 
 
 		
