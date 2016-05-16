@@ -19,24 +19,26 @@ public class paintjob : MonoBehaviour
 
 	public class Painter
 	{
-		public PaintJob[] jobs = new PaintJob[0];
 
 		private PaintJob[,] jobMatrix = new PaintJob[8, 8];
 		private float quadSize = 0.0f;
+		private Terrain terrain;
 
 
 
 
-		public Painter (GameObject terrainObject, float quadSize)
+		public Painter (Terrain terrainObject, float quadSize)
 		{
 			this.quadSize = quadSize;
-			InitMeshes(terrainObject);
+			this.terrain = terrainObject;
+			InitMeshes();
+
 		}
 
-		public void InitMeshes (GameObject terrainObject)
+		public void InitMeshes ()
 		{
 			List<PaintJob> pjs = new List<PaintJob> ();
-			Transform[] objs = terrainObject.GetComponentsInChildren<Transform> (); 
+			Transform[] objs = terrain.GetComponentsInChildren<Transform> (); 
 
 			for (int i = 0; i < objs.Length; ++i) {
 				GameObject go = objs [i].gameObject;
@@ -56,14 +58,12 @@ public class paintjob : MonoBehaviour
 					}
 				}
 			}
-			jobs = pjs.ToArray ();
 		}
 			
 	
 
 		public void paintMeshesFromDictionary (Vector3 point)
 		{
-			
 
 
 			List<PaintJob> closeJobs = new List<PaintJob> ();
@@ -93,18 +93,6 @@ public class paintjob : MonoBehaviour
 			}
 
 			EndStroke (closeJobs.ToArray());
-		}
-
-		private Vector3 stringToVector3(string key){
-
-			key = key.Split ('(', ')') [1];
-			string[] values = key.Split (',');	 
-
-				
-			Vector3 vector = new Vector3(float.Parse(values[0]), float.Parse(values[1]), float.Parse(values[2]));
-			return vector;
-
-
 		}
 
 

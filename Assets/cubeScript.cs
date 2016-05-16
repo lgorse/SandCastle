@@ -8,7 +8,7 @@ public class cubeScript : MonoBehaviour {
 	JBooth.VertexPainterPro.VertexInstanceStream painter;
 	GameObject eventSystem;
 	GazeInputModule inputModule;
-	GameObject terrain;
+	Terrain terrain;
 	paintjob.Painter paintHolder;
 
 
@@ -19,7 +19,7 @@ public class cubeScript : MonoBehaviour {
 	void Start () {
 		 eventSystem = GameObject.Find ("EventSystem");
 		 inputModule = eventSystem.GetComponent<GazeInputModule> ();
-		terrain = GameObject.Find ("Terrain");
+		terrain = gameObject.GetComponent<Terrain>();
 		QT_PolyWorldTerrain pTerrain = gameObject.GetComponent<QT_PolyWorldTerrain> ();
 		if (pTerrain != null) {
 			Vector2 chunk = pTerrain.GetChunkSizes()[pTerrain.chunkIndex];
