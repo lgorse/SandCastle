@@ -823,8 +823,7 @@ public class QT_PolyWorldTerrain : MonoBehaviour
         CTR = terrainData.alphamapResolution;
 
     }
-
-
+		
     //determines the measurements of valid chunksizes.
     public Vector2[] GetChunkSizes()
     {
@@ -859,5 +858,7 @@ public class QT_PolyWorldTerrain : MonoBehaviour
 
 
 	#endif
+
+
 
 }

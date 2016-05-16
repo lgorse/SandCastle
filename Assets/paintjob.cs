@@ -21,7 +21,7 @@ public class paintjob : MonoBehaviour
 	{
 
 		private PaintJob[,] jobMatrix = new PaintJob[8, 8];
-		private float quadSize = 0.0f;
+		private float quadSize = 6.25f;
 		private Terrain terrain;
 
 

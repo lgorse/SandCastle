@@ -22,8 +22,8 @@ public class cubeScript : MonoBehaviour {
 		terrain = gameObject.GetComponent<Terrain>();
 		QT_PolyWorldTerrain pTerrain = gameObject.GetComponent<QT_PolyWorldTerrain> ();
 		if (pTerrain != null) {
-			Vector2 chunk = pTerrain.GetChunkSizes()[pTerrain.chunkIndex];
-			paintHolder = new paintjob.Painter(terrain, chunk.x);
+			//Vector2 chunk = pTerrain.GetChunkSizes()[pTerrain.chunkIndex];
+			paintHolder = new paintjob.Painter(terrain, 6.25f);
 		}
 
 
